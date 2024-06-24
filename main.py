@@ -1,15 +1,15 @@
-from pprint import pprint
-
+import time
+import requests
+import os
+import json
+import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-from bs4 import BeautifulSoup
-import requests
-import os
 from lxml import html
+from pprint import pprint
 
 category_dict = {
     'type': (By.XPATH, "//select[@class='common_type_select required']"),
@@ -18,11 +18,11 @@ category_dict = {
     'region': (By.XPATH, "//select[@class='region_select required']"),
     'city': (By.XPATH, "//select[@class='city_select']")
 }
-
 SHOW_FINDS_BUTTON = (By.XPATH, "//button[@class='master-button v-extra v-middle show-items']")
 FINDS_COMPANIES = (By.XPATH, "//div[@class='c-company-card']")
-
 OPTION_IS_STALENESS = (By.XPATH, "//div[@class='c-company-card']")
+
+debuging_input = [2, 5, 2, 1, 2]
 
 
 def main():
@@ -38,18 +38,32 @@ def main():
     while True:
         url = driver.current_url + f"/{number_page}"  # 'https://perevozka24.ru/moskva-50/arenda-passazhirskogo-transporta-mikroavtobusy'#
 
-        if not parsingByLxml(url, f'index{number_page}.htm'):
+        if not ParsingByLxml(url, f'index{number_page}.htm'):
             break
         number_page = 2 if number_page == "" else number_page + 1
-    pprint(list_of_adv_info)
+    JsonWriteFile(list_of_adv_info)
+    CsvWriteFile(list_of_adv_info)
     time.sleep(100)
 
 
-debuging_input = [2, 5, 2, 1, 2]
-def JsonWriteFile():
-    pass
+def JsonWriteFile(list_for_json: list):
+    with open('data.json', 'w', encoding='utf-8') as file:
+        json.dump(list_for_json, file, indent=4, ensure_ascii=False)
 
-def parsing_info(driver: webdriver):
+
+def CsvWriteFile(list_for_csv: list):
+    with open('data.csv', 'w', newline='') as file:
+        header_list = ['fist_name',
+                       'second_name',
+                       'rating',
+                       'phone',
+                       'price']
+        writer = csv.DictWriter(file, fieldnames=header_list)
+        writer.writeheader()
+        for adv_dict in list_for_csv:
+            writer.writerow(adv_dict)
+
+def ParsingInfo(driver: webdriver):
     current_url = driver.current_url
     print("Адрес текущей веб-страницы:", current_url)
 
@@ -77,15 +91,18 @@ def SelectingCategory(locator, driver, index):
         DROPDOWN.select_by_index(category_index - 1)
 
 
-def DelWhitespaceCharacters(listForJoin:list)->str:
-    string_result=""
+def DelWhitespaceCharacters(listForJoin: list) -> str:
+    string_result = ""
     for corteg in listForJoin:
         for string in corteg:
-            string_result+=string.strip()+" "
+            string_result += string.strip() + " "
     return string_result
 
-list_of_adv_info=[]
-def parsingByLxml(url, name_file) -> bool:
+
+list_of_adv_info = []
+
+
+def ParsingByLxml(url, name_file) -> bool:
     src = getHTML_text(url, name_file)
     tree = html.fromstring(src)
     ROOT_ADV = "(.//*[contains(@class,'c-ad-item updi')])"
@@ -99,12 +116,11 @@ def parsingByLxml(url, name_file) -> bool:
     if not root_adv:
         return False
 
-
-    for i,adv in enumerate(root_adv):
+    for i, adv in enumerate(root_adv):
         dictAdv = {}.fromkeys(["fist_name", "second_name", "rating", "phone", "price"])
-        dictAdv["fist_name"] = ' '.join( [ i.strip() for i in adv.xpath("." + FIRST_NAMES)])
-        dictAdv["second_name"] = ' '.join( [ i.strip() for i in adv.xpath("." + SECOND_NAMES)])
-        dictAdv["rating"] = ' '.join( [ i.strip() for i in adv.xpath("." + RATING)])
+        dictAdv["fist_name"] = ' '.join([i.strip() for i in adv.xpath("." + FIRST_NAMES)])
+        dictAdv["second_name"] = ' '.join([i.strip() for i in adv.xpath("." + SECOND_NAMES)])
+        dictAdv["rating"] = ' '.join([i.strip() for i in adv.xpath("." + RATING)])
         dictAdv["phone"] = ' '.join([i.strip() for i in adv.xpath("." + PHONES)]).strip()
 
         price_join = list(zip(adv.xpath("." + PRICE + "//text()"),
