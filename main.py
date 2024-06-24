@@ -46,7 +46,8 @@ def main():
 
 
 debuging_input = [2, 5, 2, 1, 2]
-
+def JsonWriteFile():
+    pass
 
 def parsing_info(driver: webdriver):
     current_url = driver.current_url
@@ -76,14 +77,18 @@ def SelectingCategory(locator, driver, index):
         DROPDOWN.select_by_index(category_index - 1)
 
 
-def DelWhitespaceCharacters(string:str)->str:
-    pass
+def DelWhitespaceCharacters(listForJoin:list)->str:
+    string_result=""
+    for corteg in listForJoin:
+        for string in corteg:
+            string_result+=string.strip()+" "
+    return string_result
 
 list_of_adv_info=[]
 def parsingByLxml(url, name_file) -> bool:
     src = getHTML_text(url, name_file)
     tree = html.fromstring(src)
-    ROOT_ADV = "(//*[contains(@class,'c-ad-item updi')])"
+    ROOT_ADV = "(.//*[contains(@class,'c-ad-item updi')])"
     FIRST_NAMES = "//*[@target='_blank']/text()"
     SECOND_NAMES = "//*[@class='cb-name']//*[@class='javalnk blank']//text()"
     RATING = "//*[@class='place-in-rating']//text()"
@@ -93,22 +98,19 @@ def parsingByLxml(url, name_file) -> bool:
 
     if not root_adv:
         return False
-    dictAdv = {}.fromkeys(["fist_name", "second_name", "rating", "phone", "price"])
-    for adv in root_adv:
-        dictAdv["fist_name"] = ''.join(adv.xpath("." + FIRST_NAMES)).strip()
-        dictAdv["second_name"] = ''.join(adv.xpath("." + SECOND_NAMES)).strip()
-        dictAdv["rating"] = ''.join(adv.xpath("." + RATING)).strip()
-        dictAdv["phone"] = " ".join([i.strip() for i in adv.xpath("." + PHONES)]).strip()
+
+
+    for i,adv in enumerate(root_adv):
+        dictAdv = {}.fromkeys(["fist_name", "second_name", "rating", "phone", "price"])
+        dictAdv["fist_name"] = ' '.join( [ i.strip() for i in adv.xpath("." + FIRST_NAMES)])
+        dictAdv["second_name"] = ' '.join( [ i.strip() for i in adv.xpath("." + SECOND_NAMES)])
+        dictAdv["rating"] = ' '.join( [ i.strip() for i in adv.xpath("." + RATING)])
+        dictAdv["phone"] = ' '.join([i.strip() for i in adv.xpath("." + PHONES)]).strip()
 
         price_join = list(zip(adv.xpath("." + PRICE + "//text()"),
                               adv.xpath("." + PRICE + "/following-sibling::*[@class='ai-label']//text()")))
-        price_join = ''.join([''.join(i) for i in price_join])
-        price_join = price_join.replace("\n", "")
-        price_join = " ".join(price_join.split())
-
-        dictAdv["price"] = price_join
+        dictAdv["price"] = DelWhitespaceCharacters(price_join)
         list_of_adv_info.append(dictAdv)
-
     return True
 
 
