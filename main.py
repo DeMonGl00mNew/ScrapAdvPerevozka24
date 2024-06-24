@@ -77,12 +77,17 @@ def SelectingCategory(locator, driver, index):
     next_element = driver.find_element(*next_locator).find_element(*(By.XPATH, ".//option[2]"))
 
     DROPDOWN = Select(element)
-    all_options = DROPDOWN.options
+    try:
+        all_options = DROPDOWN.options
+    except:
+        wait = WebDriverWait(driver, 30, poll_frequency=1)
+        wait.until(EC.presence_of_all_elements_located(next_element))
+        all_options = DROPDOWN.options
     for i, option in enumerate(all_options):
-        # print(f"{i + 1} {option.text}")
-        pass
-    category_index = debuging_input[index]  # int(input(f"Выберите номер категории: "))
-    # print("-" * 20)
+        print(f"{i + 1} {option.text}")
+
+    category_index = int(input(f"Выберите номер категории: "))#debuging_input[index]
+    print("-" * 20)
     try:
         DROPDOWN.select_by_index(category_index - 1)
     except:
@@ -103,7 +108,7 @@ list_of_adv_info = []
 
 
 def ParsingByLxml(url, name_file) -> bool:
-    src = getHTML_text(url, name_file)
+    src = GetHtmlText(url, name_file)
     tree = html.fromstring(src)
     ROOT_ADV = "(.//*[contains(@class,'c-ad-item updi')])"
     FIRST_NAMES = "//*[@target='_blank']/text()"
@@ -130,7 +135,8 @@ def ParsingByLxml(url, name_file) -> bool:
     return True
 
 
-def getHTML_text(url, name_file='', force_write=False):
+
+def GetHtmlText(url, name_file='', force_write=False):
     if not os.path.exists(name_file) or force_write == True:
         req = requests.get(url)
         src = req.text
