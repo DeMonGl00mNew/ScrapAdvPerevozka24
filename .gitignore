@@ -1,2 +1,5 @@
 **/.venv/
+index*.
+data.json
+data.csv
 index*.htm
