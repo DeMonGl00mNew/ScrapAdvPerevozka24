@@ -10,6 +10,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+# Словарь с локаторами для категорий
 category_dict = {
     'type': (By.XPATH, "//select[@class='common_type_select required']"),
     'category': (By.XPATH, "//select[@class='cat_id_select required']"),
@@ -17,12 +18,14 @@ category_dict = {
     'region': (By.XPATH, "//select[@class='region_select required']"),
     'city': (By.XPATH, "//select[contains(@class,'city_select')]")
 }
+
+# Локаторы кнопок и элементов на странице
 SHOW_FINDS_BUTTON = (By.XPATH, "//button[@class='master-button v-extra v-middle show-items']")
 FINDS_COMPANIES = (By.XPATH, "//div[@class='c-company-card']")
 OPTION_IS_STALENESS = (By.XPATH, "//div[@class='c-company-card']")
 previous_adv = ""
 
-
+# Основная функция
 def main():
     rewrite_files = RewriteHtmlFolderFiles()
 
@@ -44,12 +47,12 @@ def main():
     JsonWriteFile(list_of_adv_info)
     CsvWriteFile(list_of_adv_info)
 
-
+# Функция для записи данных в JSON файл
 def JsonWriteFile(list_for_json: list):
     with open('data.json', 'w', encoding='utf-8') as file:
         json.dump(list_for_json, file, indent=4, ensure_ascii=False)
 
-
+# Функция для записи данных в CSV файл
 def CsvWriteFile(list_for_csv: list):
     with open('data.csv', 'w', newline='') as file:
         header_list = ['fist_name',
@@ -62,7 +65,7 @@ def CsvWriteFile(list_for_csv: list):
         for adv_dict in list_for_csv:
             writer.writerow(adv_dict)
 
-
+# Функция выбора категории
 def SelectingCategory(locator: tuple, driver, index):
     try:
         next_locator = category_dict[list(category_dict.keys())[index + 1]]
@@ -91,7 +94,7 @@ def SelectingCategory(locator: tuple, driver, index):
     except:
         pass
 
-
+# Функция удаления пробельных символов
 def DelWhitespaceCharacters(listForJoin: list) -> str:
     string_result = ""
     for corteg in listForJoin:
@@ -99,7 +102,7 @@ def DelWhitespaceCharacters(listForJoin: list) -> str:
             string_result += string.strip() + " "
     return string_result
 
-
+# Функция перезаписи файлов в директории
 def RewriteHtmlFolderFiles():
     while True:
         rewrite_files = input("Переписать html файлы в директории если выбрана другая категория 1-да / иначе 0-нет: ")
@@ -111,10 +114,9 @@ def RewriteHtmlFolderFiles():
             os.remove(f)
     return rewrite_files
 
-
 list_of_adv_info = []
 
-
+# Функция парсинга с помощью lxml
 def ParsingByLxml(url, name_file, rewrite_files) -> bool:
     global previous_adv
 
@@ -150,7 +152,7 @@ def ParsingByLxml(url, name_file, rewrite_files) -> bool:
         list_of_adv_info.append(dictAdv)
     return True
 
-
+# Функция получения HTML текста
 def GetHtmlText(url, name_file='', force_write=True):
     if not os.path.exists(name_file) or force_write == True:
         req = requests.get(url)
@@ -161,7 +163,6 @@ def GetHtmlText(url, name_file='', force_write=True):
     else:
         with open(name_file, "r", encoding="utf-8") as file:
             return file.read()
-
 
 if __name__ == '__main__':
     main()
